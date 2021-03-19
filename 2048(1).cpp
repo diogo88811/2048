@@ -1,20 +1,36 @@
 #include <iostream>
 #include <vector>
 #include <sstream>
-#include <math.h> 
-#include <chrono>
+#include <math.h>
 using namespace std;
-using namespace std::chrono;
-int counter = 0;
-int best = 999999;
+int best;
 int numberPeaces = 0;
 int maxTent = 0;
 int slide = 0;
+bool accpet = false;
+int counter = 0;
 vector<vector<int>> moveRight(vector<vector<int>> vec, int nMatrix, int numMoves);
 vector<vector<int>> moveLeft(vector<vector<int>> vec, int nMatrix, int numMoves);
 vector<vector<int>> moveDown(vector<vector<int>> vec, int nMatrix, int numMoves);
 vector<vector<int>> moveUp(vector<vector<int>> vec, int nMatrix, int numMoves);
 void play(vector<vector<int>> vec, int nMatrix, int numMoves);
+
+void printMatrix(vector<vector<int>> vec, int nMatrix){  
+    for(int i = 0; i < nMatrix; i++){
+        for(int j = 0; j < nMatrix; j++){
+            cout << vec[i][j] << " "; 
+        }
+        cout << endl;
+    }
+}
+
+bool isPowerOfTwo(int n)
+{
+   if(n==0)
+   return false;
+ 
+   return (ceil(log2(n)) == floor(log2(n)));
+}
 
 vector<vector<int>> moveRight(vector<vector<int>> vec, int nMatrix)
 {
@@ -96,7 +112,7 @@ vector<vector<int>> moveLeft(vector<vector<int>> vec, int nMatrix)
                     numberPeaces--;
                     vec[i][k + 1] = 0;
                     temp = k + 1;
-                    k++;
+                    k++; 
                 }
                 else
                 {
@@ -134,7 +150,7 @@ vector<vector<int>> moveDown(vector<vector<int>> vec, int nMatrix)
                 slide = 1;
                 temp--;
             }
-            if (k > 1)
+            if (k >= 1)
             {
                 if (vec[k][i] != 0 && vec[k - 1][i] != 0)
                 {
@@ -183,7 +199,7 @@ vector<vector<int>> moveUp(vector<vector<int>> vec, int nMatrix)
                 slide = 1;
                 temp++;
             }
-            if (k < nMatrix - 2)
+            if (k <= nMatrix - 2)
             {
                 if (vec[k + 1][i] != 0 && vec[k][i] != 0)
                 {
@@ -213,34 +229,45 @@ void play(vector<vector<int>> vec, int nMatrix, int numMoves)
 {
     vector<vector<int>> aux;
     int auxiliar = numberPeaces;
-    counter++;
     float auxCount = numberPeaces;
     int count1 = 0;
-    while(auxCount > 1){
-        auxCount = ceil(auxCount / 2);
-        count1 ++;
-    }
-
-    if(count1 + (maxTent - numMoves) >= best){
-        return;
-    }
-
-
-    if (numMoves < 0)
-    {
-        return;
-    }
-    if (best <= maxTent - numMoves)
-    {
-        return;
-    }
+    counter++;
 
     if (numberPeaces == 1)
-    {
-        if (best > maxTent - numMoves)
+    {   
+        if (best >= maxTent - numMoves)
         {
+            accpet = true;
             best = maxTent - numMoves;
         }
+        return;
+    }
+
+    if (numMoves < 0)
+    {   
+        return;
+    }
+
+    while (auxCount > 1)
+    {
+        auxCount = ceil(auxCount / 2);
+        count1++;
+    }
+
+    if (count1 + (maxTent - numMoves) >= best)
+    {   
+        if (count1 + (maxTent - numMoves) > best)
+        {
+            return;
+        }
+        else if (count1 + (maxTent - numMoves) == best && accpet == true)
+        {
+            return;
+        }
+    }
+
+    if (best <= maxTent - numMoves)
+    {   
         return;
     }
 
@@ -249,6 +276,7 @@ void play(vector<vector<int>> vec, int nMatrix, int numMoves)
     {
         play(aux, nMatrix, numMoves - 1);
     }
+
     numberPeaces = auxiliar;
 
     aux = moveRight(vec, nMatrix);
@@ -279,7 +307,9 @@ int main()
     vector<vector<int>> vec;
     vector<int> vec1;
     int numberTestCases, nMatrix, numbers;
-
+    int sum = 0;
+    float auxCount;
+    int count1 = 0;
     cin >> numberTestCases;
 
     for (int i = 0; i < numberTestCases; i++)
@@ -287,7 +317,7 @@ int main()
         vec.clear();
 
         cin >> nMatrix >> maxTent;
-        best = maxTent +1 ;
+        best = maxTent;
 
         for (int k = 0; k < nMatrix; k++)
         {
@@ -298,20 +328,25 @@ int main()
                 if (numbers != 0)
                 {
                     numberPeaces++;
+                    sum += numbers;
                 }
                 vec1.push_back(numbers);
             }
             vec.push_back(vec1);
         }
 
-        auto start = high_resolution_clock::now();
-        play(vec, nMatrix, maxTent);
-        auto stop = high_resolution_clock::now();
-        auto duration = duration_cast<microseconds>(stop - start);
-        cout << "Time: " << duration.count() << "\n";
+        auxCount = numberPeaces;
+        while (auxCount > 1)
+        {
+            auxCount = ceil(auxCount / 2);
+            count1++;
+        }
 
 
-        if (best == maxTent + 1 || best > maxTent)
+        if(isPowerOfTwo(sum) && count1 <= maxTent){
+            play(vec, nMatrix, maxTent);
+        }
+        if (accpet == false)
         {
             cout << "no solution" << endl;
         }
@@ -319,8 +354,9 @@ int main()
         {
             cout << best << endl;
         }
-        cout << counter << endl;
-        counter = 0;
+        sum = 0;
+        accpet = false;
+        count1 = 0;
         numberPeaces = 0;
     }
 }
